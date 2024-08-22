@@ -38,8 +38,7 @@ let mongoID;
 let mongoObject;
 const folders = ["images", "uploads", "output", "imageVault", "files"];
 
-//todo borrar esto
-/* async function initializeApp() {
+async function initializeApp() {
   try {
     mongoID = await createMongoObject();
     mongoID = mongoID;
@@ -49,7 +48,7 @@ const folders = ["images", "uploads", "output", "imageVault", "files"];
   } catch (error) {
     console.log(error);
   }
-} */
+}
 
 // Ensure initializeApp completes before starting the server
 initializeApp().then(() => {
