@@ -9,6 +9,7 @@ const XLSX = require("xlsx");
 const OpenAI = require("openai");
 const { excelToHTML } = require("./excelToHTML.js");
 const openai = new OpenAI();
+const { toFile } = require("openai");
 
 const apiKey = process.env.OPENAI_API_KEY;
 
@@ -73,14 +74,22 @@ let errorCount;
 let expectedAnswersLocal;
 let receivedInquiry;
 
-async function processUploadedFile(inputFile, results, inquiry, res) {
+async function processUploadedFile(
+  inputFile,
+  results,
+  inquiry,
+  res,
+  contentBuffer
+) {
   try {
-    await uploadFile(inputFile, results, inquiry, res);
+    await uploadFile(inputFile, results, inquiry, res, contentBuffer);
+    //todo descomentar esto
     await createVectorStore(res);
     await attachVectorStore(res);
     await createThread(res);
     await runThread(res, inputFile);
 
+    //todo descomentar esto
     // Ensure the file deletion happens after the assistant's response is processed
     await new Promise((resolve) => {
       stream.on("messageDone", async (event) => {
@@ -104,18 +113,21 @@ async function processUploadedFile(inputFile, results, inquiry, res) {
   //console.log("RES en assistant", res);
 }
 
-async function uploadFile(inputFile, results, inquiry, res) {
+async function uploadFile(inputFile, results, inquiry, res, contentBuffer) {
   //console.log("res en upload:", res);
   console.log("uploadfile");
-  fileToProcess = inputFile;
+  fileToProcess = contentBuffer ? contentBuffer : inputFile;
+  console.log(fileToProcess);
+
   receivedInquiry = inquiry;
 
   console.log(fileToProcess);
   try {
     uploadedFile = await openai.files.create({
-      file: fs.createReadStream(fileToProcess),
+      file: await toFile(fileToProcess, "input.txt"),
       purpose: "assistants",
     });
+
     //res.render("download.ejs");
   } catch (error) {
     console.log(error);

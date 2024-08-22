@@ -4,7 +4,7 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const xlsx = require("xlsx");
-require("dotenv").config(); // Require dotenv configuration
+require("dotenv").config();
 const routes = require("./routes");
 const ejs = require("ejs");
 
@@ -22,6 +22,11 @@ const { processUploadedFile } = require("./assistantTest2.js");
 const { getImages } = require("./extractImages.js");
 const { replaceImages } = require("./replaceImages.js");
 const { extractImageExcel } = require("./extractImageExcel.js");
+const {
+  createMongoObject,
+  findOneMongo,
+  addToMongoObject,
+} = require("./mongoUtil.js");
 const openai = new OpenAI();
 
 const app = express();
@@ -29,222 +34,259 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 let processedData;
 let responsesArray = [];
+let mongoID;
+let mongoObject;
 const folders = ["images", "uploads", "output", "imageVault", "files"];
 
-app.use(cors());
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
-app.use(express.json()); // For parsing application/json
-app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
-app.use("/", routes());
+//todo borrar esto
+/* async function initializeApp() {
+  try {
+    mongoID = await createMongoObject();
+    mongoID = mongoID;
+    console.log("Mongo ID:", mongoID.toString());
+    mongoObject = await findOneMongo(mongoID);
+    console.log("Mongo object:", mongoObject);
+  } catch (error) {
+    console.log(error);
+  }
+} */
 
-app.use(express.static(path.join(__dirname, "public")));
+// Ensure initializeApp completes before starting the server
+initializeApp().then(() => {
+  app.use(cors());
+  app.set("view engine", "ejs");
+  app.set("views", path.join(__dirname, "views"));
+  app.use(express.json()); // For parsing application/json
+  app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
+  app.use("/", routes());
 
-// Serve frontend
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
+  app.use(express.static(path.join(__dirname, "public")));
 
-app.post(
-  "/submit",
-  upload.fields([{ name: "files" }, { name: "previousFiles" }]),
-  async (req, res) => {
-    responsesArray = [];
-    let filesReceived = [];
-    let inputsReceived = [];
-    const contentArray = req.body.content;
-    const files = req.files["files"] || [];
-    const previousFiles = req.files["previousFiles"] || [];
-    console.log("body:", contentArray);
-    try {
-      await deleteOneFile("./excelBase/addInfoToThis.xlsx");
+  // Serve frontend
+  app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+  });
 
-      if (previousFiles.length > 0) {
-        let file = previousFiles[0];
-        let fileContent = file.buffer;
+  app.post(
+    "/submit",
 
-        if (
-          file.mimetype === "application/vnd.ms-excel" ||
-          file.mimetype ===
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        ) {
-          await savePrevFileToExcelBase(file);
+    upload.fields([{ name: "files" }, { name: "previousFiles" }]),
+    async (req, res) => {
+      responsesArray = [];
+      let filesReceived = [];
+      let inputsReceived = [];
+      const contentArray = req.body.content;
+      let contentBuffer;
+      const files = req.files["files"] || [];
+      const previousFiles = req.files["previousFiles"] || [];
+      console.log("body:", contentArray);
+      try {
+        if (previousFiles.length > 0) {
+          let file = previousFiles[0];
+          let fileContent = file.buffer;
+
+          if (
+            file.mimetype === "application/vnd.ms-excel" ||
+            file.mimetype ===
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          ) {
+            await addToMongoObject(mongoID, "excelBase", fileContent);
+          }
         }
+
+        //todo descomentar esto
+        // await processEachFile();
+
+        if (contentArray && contentArray.length > 0) {
+          console.log("CONTENT");
+          //todo descomentar esto
+          await processInputContent();
+        }
+
+        console.log("responsesArray", responsesArray);
+        //todo descomentar esto
+        await writeOutputToExcel(responsesArray, res, req.body.projectName);
+        //todo descomentar esto
+        await replaceImages();
+      } catch (error) {
+        console.error("Error during /submit process:", error);
+        res.json({
+          success: true,
+          redirectUrl: "/error",
+          message: "An error occurred during the process.",
+        });
+        //res.status(500).send("An error occurred during the process.");
+        return; // Stops further execution of the route
       }
 
-      await processEachFile();
+      //todo descomentar esto
+      /*  async function processEachFile() {
+        await manageFolders(folders);
 
-      if (contentArray && contentArray.length > 0) {
-        console.log("CONTENT");
-        await processInputContent();
-      }
+        for (const file of files) {
+          console.log(`comienza proceso de file ${file.originalname}`);
+          console.log("file:", file);
+          let fileContent = file.buffer;
+          let filePath = null;
 
-      console.log("responsesArray", responsesArray);
-      await writeOutputToExcel(responsesArray, res, req.body.projectName);
-      await replaceImages();
-    } catch (error) {
-      console.error("Error during /submit process:", error);
-      res.json({
-        success: true,
-        redirectUrl: "/error",
-        message: "An error occurred during the process.",
-      });
-      //res.status(500).send("An error occurred during the process.");
-      return; // Stops further execution of the route
-    }
+          if (
+            file.mimetype === "application/vnd.ms-excel" ||
+            file.mimetype ===
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          ) {
+            try {
+              await saveFileToFiles(file);
+              await manageFolders(["images"]);
+              let excelPath = `./files/${file.originalname}`;
+              await extractImageExcel(excelPath);
 
-    async function processEachFile() {
-      await manageFolders(folders);
+              const workbook = xlsx.read(file.buffer, { type: "buffer" });
+              const sheetName = workbook.SheetNames[0];
+              const worksheet = workbook.Sheets[sheetName];
 
-      for (const file of files) {
-        console.log(`comienza proceso de file ${file.originalname}`);
-        console.log("file:", file);
-        let fileContent = file.buffer;
-        let filePath = null;
+              const data = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
+              const trimmedData = data.slice(0, 100);
+              const trimmedWorksheet = xlsx.utils.aoa_to_sheet(trimmedData);
+              const fileContent = xlsx.utils.sheet_to_html(trimmedWorksheet);
 
-        if (
-          file.mimetype === "application/vnd.ms-excel" ||
-          file.mimetype ===
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        ) {
+              filePath = path.join(
+                __dirname,
+                "uploads",
+                `${file.originalname}.html`
+              );
+              fs.writeFileSync(filePath, fileContent);
+
+              let openaiResponse = await processUploadedFile(
+                filePath,
+                req.body.resultsPerDoc,
+                req.body.inquiry,
+                res
+              );
+              await handleImages(openaiResponse);
+
+              responsesArray.push(openaiResponse);
+            } catch (error) {
+              console.error(
+                `Error processing file ${file.originalname}:`,
+                error
+              );
+              throw error; // Propagate error to stop execution
+            }
+          } else {
+            try {
+              await saveFileToUploads(file);
+              filePath = `./uploads/${file.originalname}`;
+
+              if (filePath.includes(".pdf")) {
+                await getImages(filePath);
+              }
+
+              let openaiResponse = await processUploadedFile(
+                filePath,
+                req.body.resultsPerDoc,
+                req.body.inquiry,
+                res
+              );
+              await handleImages(openaiResponse);
+
+              responsesArray.push(openaiResponse);
+            } catch (error) {
+              console.error(
+                `Error processing non-Excel file ${file.originalname}:`,
+                error
+              );
+              throw error; // Propagate error to stop execution
+            }
+          }
+        }
+      } */
+
+      //todo descomentar esto
+      async function processInputContent() {
+        for (let contentObj of contentArray) {
           try {
-            await saveFileToFiles(file);
-            await manageFolders(["images"]);
-            let excelPath = `./files/${file.originalname}`;
-            await extractImageExcel(excelPath);
+            const contentText = `Provider name: ${contentObj.title}. Information: ${contentObj.content}`;
 
-            const workbook = xlsx.read(file.buffer, { type: "buffer" });
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
+            // Create an in-memory buffer with the content
+            contentBuffer = Buffer.from(contentText, "utf-8");
 
-            const data = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
-            const trimmedData = data.slice(0, 100);
-            const trimmedWorksheet = xlsx.utils.aoa_to_sheet(trimmedData);
-            const fileContent = xlsx.utils.sheet_to_html(trimmedWorksheet);
-
-            filePath = path.join(
+            //todo borrar esto
+            /* const contentFilePath = path.join(
               __dirname,
               "uploads",
-              `${file.originalname}.html`
+              `${contentObj.title}.txt`
             );
-            fs.writeFileSync(filePath, fileContent);
+            fs.writeFileSync(contentFilePath, contentText); */
 
+            //todo descomentar esto
             let openaiResponse = await processUploadedFile(
-              filePath,
+              "",
               req.body.resultsPerDoc,
               req.body.inquiry,
-              res
+              res,
+              contentBuffer
             );
-            await handleImages(openaiResponse);
-
             responsesArray.push(openaiResponse);
           } catch (error) {
-            console.error(`Error processing file ${file.originalname}:`, error);
-            throw error; // Propagate error to stop execution
-          }
-        } else {
-          try {
-            await saveFileToUploads(file);
-            filePath = `./uploads/${file.originalname}`;
-
-            if (filePath.includes(".pdf")) {
-              await getImages(filePath);
-            }
-
-            let openaiResponse = await processUploadedFile(
-              filePath,
-              req.body.resultsPerDoc,
-              req.body.inquiry,
-              res
-            );
-            await handleImages(openaiResponse);
-
-            responsesArray.push(openaiResponse);
-          } catch (error) {
-            console.error(
-              `Error processing non-Excel file ${file.originalname}:`,
-              error
-            );
+            console.error("Error processing input content:", error);
             throw error; // Propagate error to stop execution
           }
         }
       }
-    }
 
-    async function processInputContent() {
-      for (let contentObj of contentArray) {
+      /* async function handleImages(openaiResponse) {
         try {
-          const contentText = `Provider name: ${contentObj.title}\n${contentObj.content}`;
-          const contentFilePath = path.join(
-            __dirname,
-            "uploads",
-            `${contentObj.title}.txt`
-          );
-          fs.writeFileSync(contentFilePath, contentText);
-
-          let openaiResponse = await processUploadedFile(
-            contentFilePath,
-            req.body.resultsPerDoc,
-            req.body.inquiry,
-            res
-          );
-          responsesArray.push(openaiResponse);
+          let imagesList = await fs.readdirSync("./images");
+          for (let i = 1; i <= imagesList.length; i++) {
+            if (i === 1) {
+              openaiResponse.openaiResponse =
+                openaiResponse.openaiResponse.replace(
+                  `"PRODUCT REAL PICTURES": "NF"`,
+                  `"PRODUCT REAL PICTURES":"${imagesList[i - 1]}"`
+                );
+              openaiResponse.openaiResponse =
+                openaiResponse.openaiResponse.replace(
+                  `"PRODUCT REAL PICTURES":"NF"`,
+                  `"PRODUCT REAL PICTURES":"${imagesList[i - 1]}"`
+                );
+            }
+            openaiResponse.openaiResponse =
+              openaiResponse.openaiResponse.replace(
+                `"IMAGE ${i}": "NF"`,
+                `"IMAGE ${i}":"${imagesList[i - 1]}"`
+              );
+            openaiResponse.openaiResponse =
+              openaiResponse.openaiResponse.replace(
+                `"IMAGE ${i}":"NF"`,
+                `"IMAGE ${i}":"${imagesList[i - 1]}"`
+              );
+          }
+          console.log("con imagenes: ", openaiResponse);
         } catch (error) {
-          console.error("Error processing input content:", error);
+          console.error("Error handling images:", error);
           throw error; // Propagate error to stop execution
         }
-      }
+      } */
     }
+  );
 
-    async function handleImages(openaiResponse) {
-      try {
-        let imagesList = await fs.readdirSync("./images");
-        for (let i = 1; i <= imagesList.length; i++) {
-          if (i === 1) {
-            openaiResponse.openaiResponse =
-              openaiResponse.openaiResponse.replace(
-                `"PRODUCT REAL PICTURES": "NF"`,
-                `"PRODUCT REAL PICTURES":"${imagesList[i - 1]}"`
-              );
-            openaiResponse.openaiResponse =
-              openaiResponse.openaiResponse.replace(
-                `"PRODUCT REAL PICTURES":"NF"`,
-                `"PRODUCT REAL PICTURES":"${imagesList[i - 1]}"`
-              );
-          }
-          openaiResponse.openaiResponse = openaiResponse.openaiResponse.replace(
-            `"IMAGE ${i}": "NF"`,
-            `"IMAGE ${i}":"${imagesList[i - 1]}"`
-          );
-          openaiResponse.openaiResponse = openaiResponse.openaiResponse.replace(
-            `"IMAGE ${i}":"NF"`,
-            `"IMAGE ${i}":"${imagesList[i - 1]}"`
-          );
-        }
-        console.log("con imagenes: ", openaiResponse);
-      } catch (error) {
-        console.error("Error handling images:", error);
-        throw error; // Propagate error to stop execution
-      }
-    }
-  }
-);
+  app.get("/download", (req, res) => {
+    console.log("download is being hit");
+    res.render("download.ejs");
+  });
+  app.get("/download2", (req, res) => {
+    console.log("download is being hit");
+    res.render("download2.ejs");
+  });
 
-app.get("/download", (req, res) => {
-  console.log("download is being hit");
-  res.render("download.ejs");
-});
-app.get("/download2", (req, res) => {
-  console.log("download is being hit");
-  res.render("download2.ejs");
-});
+  app.get("/error", (req, res) => {
+    console.log("ERROR ROUTE");
 
-app.get("/error", (req, res) => {
-  console.log("ERROR ROUTE");
+    res.status(500).render("error.ejs");
+  });
 
-  res.status(500).render("error.ejs");
-});
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
 });
