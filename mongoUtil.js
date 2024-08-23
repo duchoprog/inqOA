@@ -54,6 +54,29 @@ async function findOneMongo(id) {
     console.log("Connection to MongoDB Atlas closed");
   }
 }
+///////
+async function findAllMongo() {
+  try {
+    await client.connect();
+    const database = client.db("inquiry");
+    const collection = database.collection("inquiryTempStorage");
+    await collection
+      .find({})
+      .toArray()
+      .then((ans) => {
+        console.log(ans);
+      });
+    //console.log("Found all =>", findResult);
+    return findResult;
+  } catch (error) {
+    console.log(error);
+  } finally {
+    await client.close();
+    console.log("Connection to MongoDB Atlas closed");
+  }
+}
+
+//////
 // Function to update MongoDB object
 async function addToMongoObject(id, key, fileContent) {
   try {
@@ -117,9 +140,9 @@ function pauseExecution() {
     });
   });
 }
-
 module.exports = {
   createMongoObject,
   findOneMongo,
   addToMongoObject,
+  findAllMongo,
 };

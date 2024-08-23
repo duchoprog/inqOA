@@ -117,7 +117,6 @@ async function uploadFile(inputFile, results, inquiry, res, contentBuffer) {
   //console.log("res en upload:", res);
   console.log("uploadfile");
   fileToProcess = contentBuffer ? contentBuffer : inputFile;
-  console.log(fileToProcess);
 
   receivedInquiry = inquiry;
 
@@ -164,9 +163,9 @@ async function createThread() {
   });
 }
 
-async function runThread(res, inputFile) {
-  inputFile = inputFile.split("\\").pop();
-  inputFile = inputFile.split(".").slice(0, -1).join(".");
+async function runThread(res, fileToProcess) {
+  fileToProcess = fileToProcess.split("\\").pop();
+  fileToProcess = fileToProcess.split(".").slice(0, -1).join(".");
   console.log("en run thread");
   try {
     stream = await openai.beta.threads.runs

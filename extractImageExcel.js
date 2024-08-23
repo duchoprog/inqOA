@@ -1,6 +1,7 @@
 const JSZip = require("jszip");
 const fs = require("fs");
 const path = require("path");
+const { addToMongoObject } = require("./mongoUtil.js");
 
 // Directory to save extracted images
 const outputDir = "./images";
@@ -11,12 +12,12 @@ if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true });
 }
 
-async function extractImageExcel(pathToExcel) {
+async function extractImageExcel(fileContent, mongoID) {
   await console.log("empieza extract");
   try {
     // Load the XLSX file as a ZIP archive
-    const fileData = await fs.readFileSync(pathToExcel);
-    await JSZip.loadAsync(fileData)
+    //const fileData = await fs.readFileSync(pathToExcel);
+    await JSZip.loadAsync(fileContent)
       .then((zip) => {
         // Filter and extract image files
         Object.keys(zip.files)
@@ -28,14 +29,16 @@ async function extractImageExcel(pathToExcel) {
               const timestamp = Date.now();
               file
                 .async("nodebuffer")
-                .then((data) => {
-                  const imagePath = path.join(
+                .then(async (data) => {
+                  /* const imagePath = path.join(
                     `${timestamp}${path.basename(filename)}`
                   );
 
                   fs.writeFileSync(`./images/${imagePath}`, data);
                   fs.writeFileSync(`./imageVault/${imagePath}`, data);
-                  console.log(`Extracted: ${imagePath}`);
+                  console.log(`Extracted: ${imagePath}`); */
+                  await addToMongoObject(mongoID, "images", fileContent);
+                  await addToMongoObject(mongoID, "imageVault", fileContent);
                 })
                 .catch(console.error);
             }
