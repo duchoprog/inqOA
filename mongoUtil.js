@@ -1,4 +1,4 @@
-const { MongoClient, ObjectId } = require("mongodb");
+const { MongoClient, ObjectId, GridFSBucket } = require("mongodb");
 require("dotenv").config();
 const readline = require("readline");
 
@@ -96,6 +96,33 @@ async function addToMongoObject(id, key, fileContent) {
     await client.close();
   }
 }
+//////////
+
+async function storeImageFromMemory(imageBuffer, fileName) {
+  await client.connect();
+
+  const database = client.db("inquiry");
+  const bucket = new GridFSBucket(db, { bucketName: "images" });
+
+  const uploadStream = bucket.openUploadStream(fileName);
+  uploadStream.end(imageBuffer);
+
+  uploadStream.on("error", function (error) {
+    console.error("Error uploading file:", error);
+  });
+
+  uploadStream.on("finish", function () {
+    console.log("File uploaded successfully");
+    client.close();
+  });
+}
+
+// Example usage
+/* const imageBuffer = Buffer.from('your_image_data', 'base64'); // Replace with your actual image buffer
+storeImageFromMemory(imageBuffer, 'image.jpg'); */
+
+/////////////
+
 async function main() {
   //const client = new MongoClient(uri);
 

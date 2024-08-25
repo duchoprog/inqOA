@@ -38,6 +38,7 @@ let mongoID;
 let mongoObject;
 const folders = ["images", "uploads", "output", "imageVault", "files"];
 
+//create mongo object structure
 async function initializeApp() {
   try {
     mongoID = await createMongoObject();
@@ -49,8 +50,6 @@ async function initializeApp() {
     console.log(error);
   }
 }
-
-// Ensure initializeApp completes before starting the server
 
 app.use(cors());
 app.set("view engine", "ejs");
@@ -69,6 +68,7 @@ app.get("/", (req, res) => {
 let contentArray;
 app.post(
   "/submit",
+  //create arrays
   upload.fields([{ name: "files" }, { name: "previousFiles" }]),
   async (req, res) => {
     initializeApp().then(async () => {
@@ -80,6 +80,7 @@ app.post(
       const files = req.files["files"] || [];
       const previousFiles = req.files["previousFiles"] || [];
       console.log("body:", contentArray);
+      //step one check if theres a previous file and store it
       try {
         if (previousFiles.length > 0) {
           let file = previousFiles[0];
@@ -93,7 +94,11 @@ app.post(
             await addToMongoObject(mongoID, "excelBase", fileContent);
           }
         }
+
+        //step 2 process each document (xlsx, pdf, txt, docx, html)
         await processEachFile(mongoID);
+
+        //step 3 process text(s) entered in the form
 
         if (contentArray && contentArray.length > 0) {
           console.log("CONTENT");
@@ -117,7 +122,7 @@ app.post(
         return; // Stops further execution of the route
       }
 
-      //todo descomentar esto
+      //step 2 cont
       async function processEachFile(mongoID) {
         //await manageFolders(folders);
         let fileContent;
@@ -127,6 +132,7 @@ app.post(
           fileContent = file.buffer;
           let filePath = null;
 
+          //step 2.1 if file is xlsx
           if (
             file.mimetype === "application/vnd.ms-excel" ||
             file.mimetype ===
@@ -139,8 +145,11 @@ app.post(
               //await saveFileToFiles(file);
               //await manageFolders(["images"]);
               //let excelPath = `./files/${file.originalname}`;
+
+              //step 2.1.1 extract images from xlsx
               await extractImageExcel(fileContent, mongoID);
 
+              //step 2.1.2 convert xlsx to html
               const workbook = xlsx.read(file.buffer, { type: "buffer" });
               const sheetName = workbook.SheetNames[0];
               const worksheet = workbook.Sheets[sheetName];
@@ -151,13 +160,7 @@ app.post(
               const fileContent2 = xlsx.utils.sheet_to_html(trimmedWorksheet);
               let fileContent2Buffer = Buffer.from(fileContent2, "utf-8");
 
-              /* filePath = path.join(
-                __dirname,
-                "uploads",
-                `${file.originalname}.html`
-              );
-              fs.writeFileSync(filePath, fileContent2); */
-
+              //step 2.1.3 process with openAI
               let openaiResponse = await processUploadedFile(
                 "",
                 req.body.resultsPerDoc,
