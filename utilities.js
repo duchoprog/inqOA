@@ -114,7 +114,7 @@ async function writeOutputToExcel(responseArray, res, projectName, sessionID) {
   ];
 
   processedData.forEach((rowData, index) => {
-    console.log("start row en for each util108", startRow);
+    //console.log("start row en for each util108", startRow);
 
     const row = worksheet.getRow(startRow + index);
     let dataIndex = 0;
