@@ -24,6 +24,7 @@ const { getImages } = require("./extractImages.js");
 const { replaceImages } = require("./replaceImages.js");
 const { extractImageExcel } = require("./extractImageExcel.js");
 const { extractImageDocx } = require("./extractImageDocx");
+const { cleanText } = require("./utilities.js");
 const openai = new OpenAI();
 
 const app = express();
@@ -108,7 +109,7 @@ app.post(
     async function processEachFile(sessionID) {
       for (const file of files) {
         console.log(`comienza proceso de file ${file.originalname}`);
-        console.log("file:", file);
+        //console.log("file:", file.originalname);
         let fileContent = file.buffer;
         let filePath = null;
 
@@ -241,6 +242,7 @@ app.post(
     }
 
     async function handleImages(openaiResponse) {
+      openaiResponse = cleanText(openaiResponse);
       try {
         let imagesList = await fs.readdirSync(`./${req.body.sessionID}/images`);
         for (let i = 1; i <= imagesList.length; i++) {

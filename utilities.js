@@ -177,7 +177,7 @@ async function writeOutputToExcel(responseArray, res, projectName, sessionID) {
   );
 
   setTimeout(() => {}, 5000);
-  console.log("culo utilities");
+  console.log("wating...");
 
   await res.json({ success: true, redirectUrl: `/download?id=${sessionID}` });
 }
@@ -248,6 +248,7 @@ async function processData(responseArray) {
     const regex = /【[^【】]*】/g;
     if (item.openaiResponse) {
       let cleanedResponse = item.openaiResponse.replace(regex, "");
+      cleanedResponse = cleanText(cleanedResponse);
       // Parse the JSON data
       let jsonData = JSON.parse(cleanedResponse);
       allData = allData.concat(jsonData);
@@ -274,32 +275,33 @@ async function manageFolders(sessionID) {
 
   for (const folderName of folders) {
     const folderPath = path.resolve(__dirname, sessionID, folderName);
-    console.log(folderPath);
 
     // Create the folder
     await fsPromises.mkdir(folderPath);
-    console.log(`Created folder: ${folderPath}`);
   }
 }
 
 function cleanText(dirtyText) {
+  console.log("dirtyText", dirtyText);
+
   // Step 1: Extract substrings between a colon and a comma or a closing curly bracket
   const regex = /:\s*([^,}]*)[,\}]/g;
   let match;
-  let text;
+  let cleanedText = dirtyText;
+
   while ((match = regex.exec(dirtyText)) !== null) {
     if ((match[1].match(/"/g) || []).length > 2) {
       console.log("mal! ", match[1]);
       const split = match[1].split('"');
       let singleQuote = `${split.join("'")}`;
       singleQuote = `"${singleQuote.slice(1, -1)}"`;
-      console.log(singleQuote);
-      text = dirtyText.replace(match[1], singleQuote);
-    } else {
-      text = dirtyText;
+      cleanedText = cleanedText.replace(match[1], singleQuote);
+      console.log("cleanedText", cleanedText);
     }
   }
-  return text;
+  console.log("cleanedText", cleanedText);
+
+  return cleanedText;
 }
 
 module.exports = {
