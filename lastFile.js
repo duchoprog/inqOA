@@ -3,9 +3,10 @@ const path = require("path");
 
 async function getLastModifiedFile(dir) {
   const files = await fs.readdir(dir);
+  console.log("files", files, "\ndir:", dir);
   const fileStats = await Promise.all(
     files.map(async (file) => {
-      const filePath = path.join(dir, file);
+      const filePath = path.join(__dirname, dir, file);
       const stats = await fs.lstat(filePath);
       return { file: filePath, mtime: stats.mtime };
     })

@@ -5,9 +5,11 @@ const { setTimeout } = require("timers");
 const xlsx = require("xlsx");
 const ExcelJS = require("exceljs");
 
+let folderPath = "newproject";
+
 // Function to save the file buffer to the uploads directory
-async function saveFileToUploads(file) {
-  const uploadsDir = path.join(__dirname, "uploads");
+async function saveFileToUploads(file, sessionID) {
+  const uploadsDir = path.join(__dirname, sessionID, "uploads");
 
   // Ensure the uploads directory exists
   if (!fs.existsSync(uploadsDir)) {
@@ -20,12 +22,12 @@ async function saveFileToUploads(file) {
   // Write the file buffer to the uploads directory
   await fs.writeFileSync(filePath, file.buffer);
 
-  console.log(`File saved to ${filePath}`);
+  console.log(`1 File saved to ${filePath}`);
 }
 
-async function saveFileToFiles(file) {
+async function saveFileToFiles(file, sessionID) {
   console.log("saving file");
-  const uploadsDir = path.join(__dirname, "files");
+  const uploadsDir = path.join(__dirname, sessionID, "files");
 
   // Ensure the uploads directory exists
   if (!fs.existsSync(uploadsDir)) {
@@ -38,12 +40,17 @@ async function saveFileToFiles(file) {
   // Write the file buffer to the uploads directory
   await fs.writeFileSync(filePath, file.buffer);
 
-  console.log(`File saved to ${filePath}`);
+  console.log(`2 File saved to ${filePath}`);
 }
 
-async function savePrevFileToExcelBase(file) {
+async function savePrevFileToExcelBase(file, sessionID) {
   console.log("saving file");
-  const uploadsDir = path.join(__dirname, "excelBase");
+  const files = await fsPromises.readdir(path.join(__dirname, sessionID));
+  console.log("files", files);
+
+  const uploadsDir = path.join(__dirname, sessionID, `excelBase`);
+  //const uploadsDir = folderPath + `/${sessionID}/excelBase`;
+  console.log(uploadsDir);
 
   // Ensure the uploads directory exists
   if (!fs.existsSync(uploadsDir)) {
@@ -56,21 +63,20 @@ async function savePrevFileToExcelBase(file) {
   // Write the file buffer to the uploads directory
   await fs.writeFileSync(filePath, file.buffer);
 
-  console.log(`File saved to ${filePath}`);
+  console.log(`3 File saved to ${filePath}`);
 }
-async function writeOutputToExcel(responseArray, res, projectName) {
+async function writeOutputToExcel(responseArray, res, projectName, sessionID) {
   // Process the data
   const processedData = await processData(responseArray);
 
   // Select starting workbook
   //const filePath = "./INQUIRY 2024 TEMPLATE v4 pablo.xlsx";
-  let startingFiles = await fs.readdirSync("./excelBase");
-  console.log("starting files:", startingFiles.length);
+  //let startingFiles = await fs.readdirSync("./excelBase");
+  //console.log("starting files:", startingFiles.length);
 
-  const filePath =
-    startingFiles.length === 1
-      ? "./excelBase/INQUIRY 2024 TEMPLATE v4 pablo2.xlsx"
-      : "./excelBase/addInfoToThis.xlsx";
+  const filePath = fs.existsSync(`./${sessionID}/excelBase/addInfoToThis.xlsx`)
+    ? `./${sessionID}/excelBase/addInfoToThis.xlsx`
+    : "./excelBase/INQUIRY 2024 TEMPLATE v4 pablo2.xlsx";
 
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.readFile(filePath);
@@ -166,11 +172,14 @@ async function writeOutputToExcel(responseArray, res, projectName) {
   // Write the workbook back to the file
   var d = new Date();
   d = d.getTime().toString();
-  await workbook.xlsx.writeFile(`./output/${projectName}${d}.xlsx`);
+  await workbook.xlsx.writeFile(
+    `./${sessionID}/output/${projectName}${d}.xlsx`
+  );
 
   setTimeout(() => {}, 5000);
+  console.log("culo utilities");
 
-  await res.json({ success: true, redirectUrl: "/download" });
+  await res.json({ success: true, redirectUrl: `/download?id=${sessionID}` });
 }
 
 //DELETE ALL FILES IN FOLDER
@@ -197,7 +206,20 @@ async function deleteOneFile(file) {
     console.log("File does not exist.");
   }
 }
+//CREATE FOLDER
+async function createFolder(name) {
+  var d = new Date();
+  d = d.getTime().toString();
+  folderPath = path.join(__dirname, `projects/${d}${name}`);
 
+  try {
+    fs.mkdirSync(folderPath);
+    console.log("Folder ", folderPath, " created successfully!");
+    return folderPath;
+  } catch (err) {
+    console.error("Error creating folder:", err);
+  }
+}
 //DELETE FOLDER
 async function deleteFolder(folder) {
   const directoryPath = path.resolve(__dirname, folder);
@@ -219,40 +241,65 @@ async function deleteFolder(folder) {
 // Function to process the data
 async function processData(responseArray) {
   let allData = [];
+  console.log("responsearray,", responseArray);
 
   responseArray.forEach((item) => {
     // Remove any content after the closing bracket '}]' but keep the closing single quote
     const regex = /【[^【】]*】/g;
-    let cleanedResponse = item.openaiResponse.replace(regex, "");
-    // Parse the JSON data
-    let jsonData = JSON.parse(cleanedResponse);
-    allData = allData.concat(jsonData);
+    if (item.openaiResponse) {
+      let cleanedResponse = item.openaiResponse.replace(regex, "");
+      // Parse the JSON data
+      let jsonData = JSON.parse(cleanedResponse);
+      allData = allData.concat(jsonData);
+    }
   });
 
   return allData;
 }
 
-async function manageFolders(folders) {
-  for (const folderName of folders) {
-    const folderPath = path.resolve(__dirname, folderName);
+async function manageFolders(sessionID) {
+  const folders = [
+    "images",
+    "uploads",
+    "output",
+    "imageVault",
+    "files",
+    "excelBase",
+  ];
+  console.log("sessionID", sessionID);
+  const folderPath = path.join(__dirname, sessionID);
+  console.log(folderPath);
 
-    try {
-      // Check if the folder exists
-      await fsPromises.access(folderPath);
-      // If it exists, delete it
-      await fsPromises.rm(folderPath, { recursive: true });
-      console.log(`Deleted folder: ${folderPath}`);
-    } catch (error) {
-      // If it doesn't exist, ignore the error
-      if (error.code !== "ENOENT") {
-        throw error;
-      }
-    }
+  await fsPromises.mkdir(folderPath);
+
+  for (const folderName of folders) {
+    const folderPath = path.resolve(__dirname, sessionID, folderName);
+    console.log(folderPath);
 
     // Create the folder
     await fsPromises.mkdir(folderPath);
     console.log(`Created folder: ${folderPath}`);
   }
+}
+
+function cleanText(dirtyText) {
+  // Step 1: Extract substrings between a colon and a comma or a closing curly bracket
+  const regex = /:\s*([^,}]*)[,\}]/g;
+  let match;
+  let text;
+  while ((match = regex.exec(dirtyText)) !== null) {
+    if ((match[1].match(/"/g) || []).length > 2) {
+      console.log("mal! ", match[1]);
+      const split = match[1].split('"');
+      let singleQuote = `${split.join("'")}`;
+      singleQuote = `"${singleQuote.slice(1, -1)}"`;
+      console.log(singleQuote);
+      text = dirtyText.replace(match[1], singleQuote);
+    } else {
+      text = dirtyText;
+    }
+  }
+  return text;
 }
 
 module.exports = {
@@ -265,4 +312,6 @@ module.exports = {
   saveFileToFiles,
   savePrevFileToExcelBase,
   deleteOneFile,
+  createFolder,
+  cleanText,
 };

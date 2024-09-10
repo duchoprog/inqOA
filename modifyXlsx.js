@@ -56,6 +56,7 @@ async function writeOutputToExcel(responseArray, res) {
   await xlsx.writeFile(workbook, filePath);
 
   setTimeout(() => {}, 5000);
+  console.log("culo");
 
   await res.json({ success: true, redirectUrl: "/download" });
 }

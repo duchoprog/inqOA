@@ -8,6 +8,7 @@ const FormData = require("form-data");
 const XLSX = require("xlsx");
 const OpenAI = require("openai");
 const { excelToHTML } = require("./excelToHTML.js");
+const { cleanText } = require("./utilities.js");
 const openai = new OpenAI();
 
 const apiKey = process.env.OPENAI_API_KEY;
@@ -60,7 +61,7 @@ const question0 = `This is the question we asked our providers: `;
 const question = `
 Based on the info in your vectorstore.
 I need you to find the relevant information and give it back to me as an array of JSON objects, with one json object(without extra formatting) per size-quantity-incoterm combination present (this means that the amount of jsons you will give me is equal to: [number of sizes offered] x [number of quantities offered] x [incoterm options], if one of them is not informed take its value as 1) with the following attributes:  `;
-const question2 = `  If for any  attribute you can't find its value, its value should be NF. The following attributes' values should be only numbers, without currency or units, as they will be used for calculations:"SET UP CHARGE USD", "SAMPLE TIME","PRODUCTION TIME", "QUANTITY", "PRICE USD", "PCS PER BOX", "L", "H", "W", "GW KG". The value for INCOTERM should be one of the following:"EXW", "FOB Shanghai", "FOB Shenzhen", "FOB Ningbo", "FOB Ningbo-Zhoushan", "FOB Hong Kong", "FOB Guangzhou", "FOB Qingdao", "FOB Tianjin", "FOB Dalian", "FOB Xiamen", "FOB Yingkou", "FOB Taizhou", "FOB Yantian", "NF" according to the price cited in the column PRICE USD.The following attributes values should refer to the manufacturer, not to the person asking for the information, the manufacturers are usually Chinese:  "COMPANY NAME", "SALES CONTACT", "WECHAT",  "EMAIL".  Dont wrap this array in a json object. Sample cost is not equal to setup cost, dont write sample cost in setup cost column. For attribute "PRODUCT REAL DESCRIPTION" copy all information describing the product, dont summarize. Setup cost might be sometimes found in the additional notes. All atributes should be enclosed in single quotation marks. Don't add any other text besides the array of json objects.`;
+const question2 = `  If for any  attribute you can't find its value, its value should be NF. The following attributes' values should be only numbers, without currency or units, as they will be used for calculations:"SET UP CHARGE USD", "SAMPLE TIME","PRODUCTION TIME", "QUANTITY", "PRICE USD", "PCS PER BOX", "L", "H", "W", "GW KG". The value for INCOTERM should be one of the following:"EXW", "FOB Shanghai", "FOB Shenzhen", "FOB Ningbo", "FOB Ningbo-Zhoushan", "FOB Hong Kong", "FOB Guangzhou", "FOB Qingdao", "FOB Tianjin", "FOB Dalian", "FOB Xiamen", "FOB Yingkou", "FOB Taizhou", "FOB Yantian", "NF" according to the price cited in the column PRICE USD.The following attributes values should refer to the manufacturer, not to the person asking for the information, the manufacturers are usually Chinese:  "COMPANY NAME", "SALES CONTACT", "WECHAT",  "EMAIL".  Dont wrap this array in a json object.  Sample cost is not equal to setup cost, dont write sample cost in setup cost column. For attribute "PRODUCT REAL DESCRIPTION" copy all information describing the product, dont summarize. Setup cost might be sometimes found in the additional notes. In the information you collect, replace all double quotes with single quotes. Don't add any other text besides the array of json objects.`;
 let answer = [];
 
 let fileToProcess;
@@ -74,6 +75,8 @@ let expectedAnswersLocal;
 let receivedInquiry;
 
 async function processUploadedFile(inputFile, results, inquiry, res) {
+  console.log("processUploadedFile inputfile:", inputFile);
+
   try {
     await uploadFile(inputFile, results, inquiry, res);
     await createVectorStore(res);
@@ -94,6 +97,12 @@ async function processUploadedFile(inputFile, results, inquiry, res) {
 
     deleteFile(uploadedFile.id);
     openaiResponse = openaiResponse.replace(/'/g, '"');
+
+    console.log(`chequearaca,
+  openaiResponse: ${openaiResponse}
+  cleanText(openaiResponse):${cleanText(openaiResponse)}`);
+
+    //openaiResponse = cleanText(openaiResponse);
 
     return { openaiResponse };
   } catch (error) {
@@ -170,7 +179,7 @@ async function runThread(res, inputFile) {
 
           console.log("assistant resp1", openaiResponse);
           // Check if openaiResponse starts with the required string
-          if (!openaiResponse.startsWith('[{"')) {
+          if (!openaiResponse.startsWith("[{")) {
             openaiResponse = `[{"COMPANY NAME":"${inputFile}", "SALES CONTACT":"no fue bien procesada por IA", "WECHAT":"NF"}]`;
           }
           // Preprocess the response to remove unwanted characters

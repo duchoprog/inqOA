@@ -10,6 +10,8 @@
   <body>
     <h2>Descargar Excel</h2>
     <form action="/download/excel" method="get">
+      <input type="hidden" name="resourceUrl" value="<%= resourceUrl %>" />
+
       <button type="submit">Descargar Excel</button>
     </form>
   </body>

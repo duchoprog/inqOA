@@ -5,13 +5,10 @@ const { manageFolders } = require("./utilities");
 
 const convertApi = new ConvertAPI(process.env.CONVERT_API_KEY);
 
-// Set the PDF file path
-let pdfFilePath = "path/to/your/file.pdf";
-
 // Convert the PDF to images
-async function getImages(filename) {
+async function getImages(filename, req) {
   console.log("extracting images from", filename);
-  await manageFolders(["images"]);
+  //await manageFolders(["images"]);
   filename = filename.trim().replaceAll("\\", "/");
   pdfFilePath = `./${filename}`;
 
@@ -24,8 +21,8 @@ async function getImages(filename) {
       },
       "pdf"
     );
-    await result.saveFiles("./images");
-    await result.saveFiles("./imageVault");
+    await result.saveFiles(`./${req.body.sessionID}/images`);
+    await result.saveFiles(`./${req.body.sessionID}/imageVault`);
   } catch (error) {
     console.error("Error extracting images:", error.response);
   }

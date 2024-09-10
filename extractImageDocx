@@ -4,7 +4,7 @@ const path = require("path");
 
 // Directory to save extracted images
 
-async function extractImageExcel(pathToExcel, sessionID) {
+async function extractImageDocx(pathToDocx, sessionID) {
   const outputDir = `./${sessionID}/images`;
   const outputDir2 = `./${sessionID}/imageVault`;
 
@@ -15,12 +15,12 @@ async function extractImageExcel(pathToExcel, sessionID) {
   await console.log("empieza extract");
   try {
     // Load the XLSX file as a ZIP archive
-    const fileData = await fs.readFileSync(pathToExcel);
+    const fileData = await fs.readFileSync(pathToDocx);
     await JSZip.loadAsync(fileData)
       .then((zip) => {
         // Filter and extract image files
         Object.keys(zip.files)
-          .filter((filename) => filename.startsWith("xl/media/"))
+          .filter((filename) => filename.startsWith("word/media/"))
           .forEach((filename) => {
             console.log("extrayendo imagen", filename);
             const file = zip.file(filename);
@@ -50,5 +50,5 @@ async function extractImageExcel(pathToExcel, sessionID) {
   }
 }
 module.exports = {
-  extractImageExcel,
+  extractImageDocx,
 };
