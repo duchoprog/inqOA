@@ -6,7 +6,7 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
-require("dotenv").config(); // Require dotenv configuration
+require("dotenv").config();
 const FormData = require("form-data");
 const XLSX = require("xlsx");
 const OpenAI = require("openai");
