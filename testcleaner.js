@@ -1,4 +1,4 @@
-/* let text = `{ "SALES CONTACT":"James", "WECHAT":"0086-13626696200", "PRODUCT REAL DESCRIPTION":"About this bag we can not do because it"s heat sealed version. if change the outer material to sewing version we can make it. like below the picture.", "SALES CONTACT":"James", "WECHAT":"0086-13626696200", "PRODUCT REAL DESCRIPTIONxxx":"About this bag we can not do because it"s heat sealed version. if change the outer material to sewing version we can make it. like below the picture.", "WECHAT":"0086-13626696200"}`; */
+let text = `{ "SALES CONTACT":"James", "WECHAT":"0086-13626696200", "PRODUCT REAL DESCRIPTION":"About material to "sewing" version ", "WECHAT":"0086-13626696200"}`;
 
 function cleanText(dirtyText) {
   // Step 1: Extract substrings between a colon and a comma or a closing curly bracket
@@ -20,7 +20,7 @@ function cleanText(dirtyText) {
 
   return cleanedText;
 }
-
-module.exports = {
+cleanText(text);
+/* module.exports = {
   cleanText,
-};
+}; */

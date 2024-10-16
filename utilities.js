@@ -173,7 +173,7 @@ async function writeOutputToExcel(responseArray, res, projectName, sessionID) {
   var d = new Date();
   d = d.getTime().toString();
   await workbook.xlsx.writeFile(
-    `./${sessionID}/output/${projectName}${d}.xlsx`
+    `./${sessionID}/output/${projectName}-${d}.xlsx`
   );
 
   setTimeout(() => {}, 5000);
@@ -282,7 +282,7 @@ async function manageFolders(sessionID) {
 }
 
 function cleanText(dirtyText) {
-  console.log("dirtyText", dirtyText);
+  //console.log("dirtyText", dirtyText);
 
   // Step 1: Extract substrings between a colon and a comma or a closing curly bracket
   const regex = /:\s*([^,}]*)[,\}]/g;
@@ -294,12 +294,12 @@ function cleanText(dirtyText) {
       console.log("mal! ", match[1]);
       const split = match[1].split('"');
       let singleQuote = `${split.join("'")}`;
-      singleQuote = `"${singleQuote.slice(1, -1)}"`;
+      singleQuote = `"${singleQuote.slice(1, -1).replace(/\\/g, "")}"`;
       cleanedText = cleanedText.replace(match[1], singleQuote);
       console.log("cleanedText", cleanedText);
     }
   }
-  console.log("cleanedText", cleanedText);
+  console.log("cleanedText!", cleanedText);
 
   return cleanedText;
 }

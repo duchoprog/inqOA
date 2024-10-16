@@ -12,6 +12,7 @@ async function getImages(filename, req) {
   filename = filename.trim().replaceAll("\\", "/");
   pdfFilePath = `./${filename}`;
 
+  //todo: descomentar esto, lo comente para hacer pruebas
   try {
     const result = await convertApi.convert(
       "extract-images",
@@ -24,7 +25,7 @@ async function getImages(filename, req) {
     await result.saveFiles(`./${req.body.sessionID}/images`);
     await result.saveFiles(`./${req.body.sessionID}/imageVault`);
   } catch (error) {
-    console.error("Error extracting images:", error.response);
+    console.error("Error extracting images:", error.response.statusText);
   }
 }
 
