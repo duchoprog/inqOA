@@ -304,7 +304,50 @@ function cleanText(dirtyText) {
   return cleanedText;
 }
 
+// Function to check if a folder is older than 2 days
+function isOlderThanTwoDays(folderPath) {
+  const currentTime = new Date();
+  const stats = fs.statSync(folderPath);
+  const folderTime = new Date(stats.mtime);
+  const timeDifference = currentTime - folderTime;
+  //const twoDaysInMilliseconds = 2 * 24 * 60 * 60 * 1000;
+  const twoDaysInMilliseconds = 2 * 60 * 60 * 1000;
+  return timeDifference > twoDaysInMilliseconds;
+}
+
+// Function to delete a folder
+function deleteFolder(folderPath) {
+  if (fs.existsSync(folderPath)) {
+    fs.rmdirSync(folderPath, { recursive: true });
+    console.log(`Deleted folder: ${folderPath}`);
+  }
+}
+
+// Function to check if a folder name matches the pattern
+function isMatchingFolderName(folderName) {
+  return /^1729\d{9}$/.test(folderName);
+}
+
+// Main function to traverse the directory and delete old folders
+function deleteOldFolders(dir) {
+  console.log("deleteOldFolders");
+
+  fs.readdirSync(dir).forEach((file) => {
+    const filePath = path.join(dir, file);
+    const stats = fs.statSync(filePath);
+
+    if (stats.isDirectory()) {
+      console.log("stats:", filePath);
+
+      if (isMatchingFolderName(file) && isOlderThanTwoDays(filePath)) {
+        deleteFolder(filePath);
+      }
+    }
+  });
+}
+
 module.exports = {
+  deleteOldFolders,
   deleteAllFilesInDir,
   deleteFolder,
   saveFileToUploads,

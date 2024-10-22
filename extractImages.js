@@ -1,6 +1,6 @@
 require("dotenv").config(); // Require dotenv configuration
 
-const convertAPI = require("convertapi")("secret_yJgmFocVUo3EisE9");
+const convertAPI = require("convertapi")(process.env.CONVERT_API_KEY);
 const { manageFolders, deleteAllFilesInDir } = require("./utilities");
 
 // Convert the PDF to images

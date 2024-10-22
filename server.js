@@ -24,7 +24,11 @@ const { getImages } = require("./extractImages.js");
 const { replaceImages } = require("./replaceImages.js");
 const { extractImageExcel } = require("./extractImageExcel.js");
 const { extractImageDocx } = require("./extractImageDocx");
-const { cleanText, deleteAllFilesInDir } = require("./utilities.js");
+const {
+  cleanText,
+  deleteAllFilesInDir,
+  deleteOldFolders,
+} = require("./utilities.js");
 const openai = new OpenAI();
 
 const app = express();
@@ -52,6 +56,9 @@ app.post(
   upload.fields([{ name: "files" }, { name: "previousFiles" }]),
 
   async (req, res) => {
+    console.log("cu");
+    deleteOldFolders("./");
+
     folderPath = await createFolder(req.projectName);
     const contentArray = req.body.content;
     const files = req.files["files"] || [];
