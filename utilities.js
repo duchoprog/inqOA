@@ -310,8 +310,7 @@ function isOlderThanTwoDays(folderPath) {
   const stats = fs.statSync(folderPath);
   const folderTime = new Date(stats.mtime);
   const timeDifference = currentTime - folderTime;
-  //const twoDaysInMilliseconds = 2 * 24 * 60 * 60 * 1000;
-  const twoDaysInMilliseconds = 2 * 60 * 60 * 1000;
+  const twoDaysInMilliseconds = 2 * 24 * 60 * 60 * 1000;
   return timeDifference > twoDaysInMilliseconds;
 }
 
