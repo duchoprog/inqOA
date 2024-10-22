@@ -24,7 +24,7 @@ const { getImages } = require("./extractImages.js");
 const { replaceImages } = require("./replaceImages.js");
 const { extractImageExcel } = require("./extractImageExcel.js");
 const { extractImageDocx } = require("./extractImageDocx");
-const { cleanText } = require("./utilities.js");
+const { cleanText, deleteAllFilesInDir } = require("./utilities.js");
 const openai = new OpenAI();
 
 const app = express();
@@ -185,6 +185,8 @@ app.post(
           ////
         } else {
           try {
+            await deleteAllFilesInDir(`./${sessionID}/images`);
+
             await saveFileToUploads(file, req.body.sessionID);
             filePath = `./${req.body.sessionID}/uploads/${file.originalname}`;
 

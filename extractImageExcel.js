@@ -1,10 +1,12 @@
 const JSZip = require("jszip");
 const fs = require("fs");
 const path = require("path");
+const { manageFolders, deleteAllFilesInDir } = require("./utilities");
 
-// Directory to save extracted images
+// Directory to save extracted images.
 
 async function extractImageExcel(pathToExcel, sessionID) {
+  await deleteAllFilesInDir(`./${sessionID}/images`);
   const outputDir = `./${sessionID}/images`;
   const outputDir2 = `./${sessionID}/imageVault`;
 

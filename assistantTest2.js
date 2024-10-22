@@ -139,7 +139,7 @@ async function uploadFile(inputFile, results, inquiry, res) {
 }
 let prompt = `${question0}${receivedInquiry}.${question} ${tableHeaders.join(
   ", "
-)} ${question2}. If vectorstore has a table, forget the empty rows. Example of expected response: [{"# ITEM":"", "PM":"", "COMPANY NAME":"Big Company", "SALES CONTACT":"Laura","WECHAT":"+54-11-4567-890"....}, {"# ITEM":"", "PM":"", "COMPANY NAME":"Small company", "SALES CONTACT":"Robert","WECHAT":"+54-11-9876-543"....}, ...]`;
+)} ${question2}. If vectorstore has a table, forget the empty rows. Example of expected response: [{ "COMPANY NAME":"Big Company", "SALES CONTACT":"Laura","WECHAT":"+54-11-4567-890"....}, { "COMPANY NAME":"Small company", "SALES CONTACT":"Robert","WECHAT":"+54-11-9876-543"....}, ...]`;
 
 async function createVectorStore() {
   var d = new Date();

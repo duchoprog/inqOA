@@ -185,7 +185,7 @@ async function writeOutputToExcel(responseArray, res, projectName, sessionID) {
 //DELETE ALL FILES IN FOLDER
 async function deleteAllFilesInDir(dirPath) {
   try {
-    console.log("deleting ", dirPath);
+    console.log("Delete all files deleting ", dirPath);
     fs.readdirSync(dirPath).forEach((file) => {
       console.log("deleting", `${dirPath}${file}`);
       fs.rmSync(path.join(dirPath, file));
