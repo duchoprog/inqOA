@@ -1,0 +1,8 @@
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+PassengerAppRoot "/home/estudiol/inquiry.estudioliquid.info"
+PassengerBaseURI "/"
+PassengerNodejs "/home/estudiol/nodevenv/inquiry.estudioliquid.info/18/bin/node"
+PassengerAppType node
+PassengerStartupFile server.js
+PassengerAppLogFile "/home/estudiol/logs/inquiry2"
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END

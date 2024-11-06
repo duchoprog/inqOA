@@ -11,7 +11,7 @@ const FormData = require("form-data");
 const XLSX = require("xlsx");
 const OpenAI = require("openai");
 const { excelToHTML } = require("./excelToHTML.js");
-const { cleanText, logMemoryUsage } = require("./utilities.js");
+const { cleanText } = require("./utilities.js");
 const openai = new OpenAI();
 
 const apiKey = process.env.OPENAI_API_KEY;
@@ -67,7 +67,7 @@ I need you to find the relevant information and give it back to me as an array o
 To generate the objects follow these steps:
 1-identify prices for the items being offered, and count how many prices are there. Use all these prices as guide for step 2
 2-for each price, make a json object, looking up the values for the following attributes for each price:  `;
-const question2 = `  If for any  attribute you can't find its value, its value should be NF. The following attributes' values should be only numbers, without currency or units, as they will be used for calculations:"SET UP CHARGE USD", "SAMPLE TIME","PRODUCTION TIME", "QUANTITY", "PRICE USD", "PCS PER BOX", "L", "H", "W", "GW KG". The value for INCOTERM should be one of the following:"EXW", "FOB Shanghai", "FOB Shenzhen", "FOB Ningbo", "FOB Ningbo-Zhoushan", "FOB Hong Kong", "FOB Guangzhou", "FOB Qingdao", "FOB Tianjin", "FOB Dalian", "FOB Xiamen", "FOB Yingkou", "FOB Taizhou", "FOB Yantian", "NF" according to the price cited in the column PRICE USD.The following attributes values should refer to the manufacturer, not to the person asking for the information, the manufacturers are usually Chinese:  "COMPANY NAME", "SALES CONTACT", "WECHAT",  "EMAIL".  Dont wrap this array in a json object.  Sample cost is not equal to setup cost, dont write sample cost in setup cost column. For attribute "PRODUCT REAL DESCRIPTION" copy the product description and any other relevant info related to the product that hasn't been included in another attribute. Setup cost might be sometimes found in the additional notes. Don't add any other text besides the array of json objects.Your response should be an array, it should start and finish with square brackets`;
+const question2 = `  If for any  attribute you can't find its value, its value should be NF. The following attributes' values should be only numbers, without currency or units, as they will be used for calculations:"SET UP CHARGE USD", "SAMPLE TIME","PRODUCTION TIME", "QUANTITY", "PRICE USD", "PCS PER BOX", "L", "H", "W", "GW KG". The value for INCOTERM should be one of the following:"EXW", "FOB Shanghai", "FOB Shenzhen", "FOB Ningbo", "FOB Ningbo-Zhoushan", "FOB Hong Kong", "FOB Guangzhou", "FOB Qingdao", "FOB Tianjin", "FOB Dalian", "FOB Xiamen", "FOB Yingkou", "FOB Taizhou", "FOB Yantian", "NF" according to the price cited in the column PRICE USD.The following attributes values should refer to the manufacturer, not to the person asking for the information, the manufacturers are usually Chinese:  "COMPANY NAME", "SALES CONTACT", "WECHAT",  "EMAIL".  Dont wrap this array in a json object.  Sample cost is not equal to setup cost, dont write sample cost in setup cost column. For attribute "PRODUCT REAL DESCRIPTION" copy the product description and any other relevant info related to the product that hasn't been included in another attribute. Setup cost might be sometimes found in the additional notes. Don't add any other text besides the array of json objects.`;
 
 /* const question0 = `This is the question we asked our providers: `;
 const question = `
@@ -88,18 +88,14 @@ let expectedAnswersLocal;
 let receivedInquiry;
 
 async function processUploadedFile(inputFile, results, inquiry, res) {
-  logMemoryUsage("empieza processuploadedFile");
   console.log("processUploadedFile inputfile:", inputFile);
 
   try {
     await uploadFile(inputFile, results, inquiry, res);
-    logMemoryUsage("termina uploadfile");
     await createVectorStore(res);
     await attachVectorStore(res);
     await createThread(res);
-    logMemoryUsage("termina createthread");
     await runThread(res, inputFile);
-    logMemoryUsage("termina runthread");
 
     // Ensure the file deletion happens after the assistant's response is processed
     await new Promise((resolve) => {
@@ -114,10 +110,7 @@ async function processUploadedFile(inputFile, results, inquiry, res) {
 
     deleteFile(uploadedFile.id);
     openaiResponse = openaiResponse.replace(/'/g, '"');
-    logMemoryUsage("fin de processuploadedfile");
-    await (() => {
-      stream = null;
-    });
+
     return { openaiResponse };
   } catch (error) {
     console.error("Error processing file:", error);
@@ -146,7 +139,7 @@ async function uploadFile(inputFile, results, inquiry, res) {
 }
 let prompt = `${question0}${receivedInquiry}.${question} ${tableHeaders.join(
   ", "
-)} ${question2}. If vectorstore has a table, forget the empty rows. Example of expected response: [{ "COMPANY NAME":"Big Company", "SALES CONTACT":"Laura","WECHAT":"+54-11-4567-890"....}, { "COMPANY NAME":"Small company", "SALES CONTACT":"Robert","WECHAT":"+54-11-9876-543"....}, ...]`;
+)} ${question2}. If vectorstore has a table, forget the empty rows. Example of expected response: [{"# ITEM":"", "PM":"", "COMPANY NAME":"Big Company", "SALES CONTACT":"Laura","WECHAT":"+54-11-4567-890"....}, {"# ITEM":"", "PM":"", "COMPANY NAME":"Small company", "SALES CONTACT":"Robert","WECHAT":"+54-11-9876-543"....}, ...]`;
 
 async function createVectorStore() {
   var d = new Date();

@@ -1,0 +1,34 @@
+require("dotenv").config(); // Require dotenv configuration
+
+const ConvertAPI = require("convertapi");
+const { manageFolders } = require("./utilities");
+
+const convertApi = new ConvertAPI(process.env.CONVERT_API_KEY);
+
+// Convert the PDF to images
+async function getImages(filename, req) {
+  console.log("extracting images from", filename);
+  //await manageFolders(["images"]);
+  filename = filename.trim().replaceAll("\\", "/");
+  pdfFilePath = `./${filename}`;
+
+  //todo: descomentar esto, lo comente para hacer pruebas
+  try {
+    const result = await convertApi.convert(
+      "extract-images",
+      {
+        File: pdfFilePath,
+        ImageFormat: "jpg",
+      },
+      "pdf"
+    );
+    await result.saveFiles(`./${req.body.sessionID}/images`);
+    await result.saveFiles(`./${req.body.sessionID}/imageVault`);
+  } catch (error) {
+    console.error("Error extracting images:", error.response.statusText);
+  }
+}
+
+module.exports = {
+  getImages,
+};

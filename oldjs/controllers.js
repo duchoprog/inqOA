@@ -14,14 +14,14 @@ const downloadExcel = async (req, res) => {
     "output",
     files[0]
   );
-  //console.log(files);
-  //console.log(fileToDownload);
+  console.log(files);
+  console.log(fileToDownload);
 
   await fs.readFile(fileToDownload, (err, data) => {
     if (err) {
       res.status(500).send({ message: "Error al leer el archivo" });
     } else {
-      //console.log(fileToDownload);
+      console.log(fileToDownload);
       res.setHeader("Content-Disposition", `attachment; filename=${files[0]}`);
       res.setHeader(
         "Content-Type",

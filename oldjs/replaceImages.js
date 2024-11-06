@@ -3,7 +3,6 @@ const fs = require("fs");
 const fsp = require("fs").promises;
 const path = require("path");
 const { getLastModifiedFile } = require("./lastFile.js");
-const { logMemoryUsage } = require("./utilities.js");
 
 async function replaceImages(req) {
   // Define the directories
@@ -99,9 +98,7 @@ async function replaceImages(req) {
   }
 
   // Replace JPEG filenames with images
-  logMemoryUsage("antes de replacejpg");
   await replaceJpegFilenamesWithImages();
-  logMemoryUsage("despues de replacejpg");
 
   // Write the updated workbook to a new file
   await workbook.xlsx.writeFile(

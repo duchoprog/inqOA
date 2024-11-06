@@ -185,7 +185,7 @@ async function writeOutputToExcel(responseArray, res, projectName, sessionID) {
 //DELETE ALL FILES IN FOLDER
 async function deleteAllFilesInDir(dirPath) {
   try {
-    console.log("Delete all files deleting ", dirPath);
+    console.log("deleting ", dirPath);
     fs.readdirSync(dirPath).forEach((file) => {
       console.log("deleting", `${dirPath}${file}`);
       fs.rmSync(path.join(dirPath, file));
@@ -241,7 +241,7 @@ async function deleteFolder(folder) {
 // Function to process the data
 async function processData(responseArray) {
   let allData = [];
-  //console.log("responsearray,", responseArray);
+  console.log("responsearray,", responseArray);
 
   responseArray.forEach((item) => {
     // Remove any content after the closing bracket '}]' but keep the closing single quote
@@ -296,76 +296,15 @@ function cleanText(dirtyText) {
       let singleQuote = `${split.join("'")}`;
       singleQuote = `"${singleQuote.slice(1, -1).replace(/\\/g, "")}"`;
       cleanedText = cleanedText.replace(match[1], singleQuote);
-      //console.log("cleanedText", cleanedText);
+      console.log("cleanedText", cleanedText);
     }
   }
-  //console.log("cleanedText!", cleanedText);
+  console.log("cleanedText!", cleanedText);
 
   return cleanedText;
 }
 
-// Function to check if a folder is older than 2 days
-function isOlderThanTwoDays(folderPath) {
-  const currentTime = new Date();
-  const stats = fs.statSync(folderPath);
-  const folderTime = new Date(stats.mtime);
-  const timeDifference = currentTime - folderTime;
-  const twoDaysInMilliseconds = 2 * 24 * 60 * 60 * 1000;
-  return timeDifference > twoDaysInMilliseconds;
-}
-
-// Function to delete a folder
-function deleteFolder(folderPath) {
-  if (fs.existsSync(folderPath)) {
-    fs.rmdirSync(folderPath, { recursive: true });
-    console.log(`Deleted folder: ${folderPath}`);
-  }
-}
-
-// Function to check if a folder name matches the pattern
-function isMatchingFolderName(folderName) {
-  return /^17\d{11}$/.test(folderName);
-}
-
-// Main function to traverse the directory and delete old folders
-function deleteOldFolders(dir) {
-  console.log("deleteOldFolders");
-
-  fs.readdirSync(dir).forEach((file) => {
-    const filePath = path.join(dir, file);
-    const stats = fs.statSync(filePath);
-
-    if (stats.isDirectory()) {
-      console.log("stats:", filePath);
-
-      if (isMatchingFolderName(file) && isOlderThanTwoDays(filePath)) {
-        deleteFolder(filePath);
-      }
-    }
-  });
-}
-
-///function to log memory usage
-function logMemoryUsage(stage) {
-  const memoryUsage = process.memoryUsage();
-  console.log(`\nMemory usage at ${stage}:`);
-  console.log(`  RSS: ${(memoryUsage.rss / 1024 / 1024).toFixed(2)} MB`);
-  console.log(
-    `  Heap Total: ${(memoryUsage.heapTotal / 1024 / 1024).toFixed(2)} MB`
-  );
-  console.log(
-    `  Heap Used: ${(memoryUsage.heapUsed / 1024 / 1024).toFixed(2)} MB`
-  );
-  console.log(
-    `  External: ${(memoryUsage.external / 1024 / 1024).toFixed(2)} MB`
-  );
-  console.log(
-    `  Array Buffers: ${(memoryUsage.arrayBuffers / 1024 / 1024).toFixed(2)} MB`
-  );
-}
-
 module.exports = {
-  deleteOldFolders,
   deleteAllFilesInDir,
   deleteFolder,
   saveFileToUploads,
@@ -377,5 +316,4 @@ module.exports = {
   deleteOneFile,
   createFolder,
   cleanText,
-  logMemoryUsage,
 };

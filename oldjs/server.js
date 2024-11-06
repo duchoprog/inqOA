@@ -18,18 +18,13 @@ const {
   savePrevFileToExcelBase,
   deleteOneFile,
   createFolder,
-  logMemoryUsage,
 } = require("./utilities.js");
 const { processUploadedFile } = require("./assistantTest2.js");
 const { getImages } = require("./extractImages.js");
 const { replaceImages } = require("./replaceImages.js");
 const { extractImageExcel } = require("./extractImageExcel.js");
 const { extractImageDocx } = require("./extractImageDocx");
-const {
-  cleanText,
-  deleteAllFilesInDir,
-  deleteOldFolders,
-} = require("./utilities.js");
+const { cleanText } = require("./utilities.js");
 const openai = new OpenAI();
 
 const app = express();
@@ -46,16 +41,6 @@ app.use(express.urlencoded({ extended: true })); // For parsing application/x-ww
 app.use("/", routes());
 
 app.use(express.static(path.join(__dirname, "public")));
-console.log("force reload");
-//// force reload
-app.use((req, res, next) => {
-  res.setHeader(
-    "Cache-Control",
-    "no-store, no-cache, must-revalidate, private"
-  );
-  next();
-});
-////
 
 // Serve frontend
 app.get("/", (req, res) => {
@@ -67,10 +52,7 @@ app.post(
   upload.fields([{ name: "files" }, { name: "previousFiles" }]),
 
   async (req, res) => {
-    console.log("cu");
-    deleteOldFolders("./");
-
-    //folderPath = await createFolder(req.projectName);
+    folderPath = await createFolder(req.projectName);
     const contentArray = req.body.content;
     const files = req.files["files"] || [];
     const previousFiles = req.files["previousFiles"] || [];
@@ -104,7 +86,7 @@ app.post(
         await processInputContent();
       }
 
-      //console.log("responsesArray", responsesArray);
+      console.log("responsesArray", responsesArray);
       await writeOutputToExcel(
         responsesArray,
         res,
@@ -166,9 +148,7 @@ app.post(
               res,
               req.body.sessionID
             );
-            logMemoryUsage("prehandleimages");
             await handleImages(openaiResponse, req.body.sessionID);
-            logMemoryUsage("post handleimages");
 
             responsesArray.push(openaiResponse, req.body.sessionID);
           } catch (error) {
@@ -205,8 +185,6 @@ app.post(
           ////
         } else {
           try {
-            await deleteAllFilesInDir(`./${sessionID}/images`);
-
             await saveFileToUploads(file, req.body.sessionID);
             filePath = `./${req.body.sessionID}/uploads/${file.originalname}`;
 
@@ -222,7 +200,7 @@ app.post(
               req.body.sessionID
             );
 
-            //console.log(openaiResponse);
+            console.log(openaiResponse);
 
             await handleImages(openaiResponse, req.body.sessionID);
 
@@ -269,7 +247,7 @@ app.post(
         let imagesList = await fs.readdirSync(`./${req.body.sessionID}/images`);
         for (let i = 1; i <= imagesList.length; i++) {
           if (i === 1) {
-            //console.log(openaiResponse.openaiResponse);
+            console.log(openaiResponse.openaiResponse);
 
             openaiResponse.openaiResponse =
               openaiResponse.openaiResponse.replace(
@@ -291,7 +269,7 @@ app.post(
             `"IMAGE ${i}":"${imagesList[i - 1]}"`
           );
         }
-        // console.log("con imagenes: ", openaiResponse);
+        console.log("con imagenes: ", openaiResponse);
       } catch (error) {
         console.error("Error handling images:", error);
         throw error; // Propagate error to stop execution
