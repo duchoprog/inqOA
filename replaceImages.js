@@ -67,7 +67,8 @@ async function replaceImages(req) {
           (cell.value.toLowerCase().endsWith(".jpeg") ||
             cell.value.toLowerCase().endsWith(".jpg") ||
             cell.value.toLowerCase().endsWith(".png") ||
-            cell.value.toLowerCase().endsWith(".bmp"))
+            cell.value.toLowerCase().endsWith(".gif") ||
+            cell.value.toLowerCase().endsWith(".bmp")) //
         ) {
           console.log("tengo que reemplazar ", cell.value);
 
