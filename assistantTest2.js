@@ -97,7 +97,6 @@ async function processUploadedFile(inputFile, results, inquiry, res) {
     await createVectorStore(res);
     await attachVectorStore(res);
     await createThread(res);
-    logMemoryUsage("termina createthread");
     await runThread(res, inputFile);
     logMemoryUsage("termina runthread");
 

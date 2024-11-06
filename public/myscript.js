@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const previousFileList = document.getElementById("previous-file-list");
   const contentListDiv = document.getElementById("content-list");
   const finalSubmitButton = document.getElementById("final-submit");
+  startHealthCheck();
 
   let section1 = [];
   let section2 = [];
@@ -140,3 +141,16 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   });
 });
+function startHealthCheck() {
+  setInterval(async () => {
+    try {
+      const response = await fetch("/health");
+      if (!response.ok) {
+        throw new Error("Server unavailable");
+      }
+    } catch (error) {
+      // Redirect to /crash if the ping fails
+      window.location.href = "/error";
+    }
+  }, 15000); // Ping every 5 seconds (adjust as needed)
+}

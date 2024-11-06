@@ -117,7 +117,7 @@ app.post(
       res.json({
         success: true,
         redirectUrl: "/error",
-        message: "An error occurred during the process.",
+        message: "Error de OpenAI",
         sessionID: req.body.sessionID,
       });
       //res.status(500).send("An error occurred during the process.");
@@ -310,6 +310,10 @@ app.get("/download", (req, res) => {
 app.get("/download2", (req, res) => {
   console.log("download is being hit");
   res.render("download2.ejs");
+});
+
+app.get("/health", (req, res) => {
+  res.sendStatus(200);
 });
 
 app.get("/error", (req, res) => {
