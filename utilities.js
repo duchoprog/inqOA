@@ -247,6 +247,8 @@ async function processData(responseArray) {
     // Remove any content after the closing bracket '}]' but keep the closing single quote
     const regex = /【[^【】]*】/g;
     if (item.openaiResponse) {
+      console.log("item de responseArray", item.openaiResponse);
+
       let cleanedResponse = item.openaiResponse.replace(regex, "");
       cleanedResponse = cleanText(cleanedResponse);
       // Parse the JSON data

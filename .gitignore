@@ -1,6 +1,6 @@
 .env
 /node_modules
 *.pdf
-*.xlsx
 /uploads
 /output
+173*

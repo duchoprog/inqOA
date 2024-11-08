@@ -166,9 +166,9 @@ app.post(
               res,
               req.body.sessionID
             );
-            logMemoryUsage("prehandleimages");
+            //logMemoryUsage("prehandleimages");
             await handleImages(openaiResponse, req.body.sessionID);
-            logMemoryUsage("post handleimages");
+            // logMemoryUsage("post handleimages");
 
             responsesArray.push(openaiResponse, req.body.sessionID);
           } catch (error) {
@@ -308,7 +308,7 @@ app.get("/download", (req, res) => {
   res.render("download.ejs", { resourceUrl: resourceUrl });
 });
 app.get("/download2", (req, res) => {
-  console.log("download is being hit");
+  console.log("download2 is being hit");
   res.render("download2.ejs");
 });
 

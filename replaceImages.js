@@ -101,9 +101,9 @@ async function replaceImages(req) {
   }
 
   // Replace JPEG filenames with images
-  logMemoryUsage("antes de replacejpg");
+  // logMemoryUsage("antes de replacejpg");
   await replaceJpegFilenamesWithImages();
-  logMemoryUsage("despues de replacejpg");
+  // logMemoryUsage("despues de replacejpg");
 
   // Write the updated workbook to a new file
   await workbook.xlsx.writeFile(

@@ -12,6 +12,7 @@ const XLSX = require("xlsx");
 const OpenAI = require("openai");
 const { excelToHTML } = require("./excelToHTML.js");
 const { cleanText, logMemoryUsage } = require("./utilities.js");
+const { log } = require("util");
 const openai = new OpenAI();
 
 const apiKey = process.env.OPENAI_API_KEY;
@@ -93,12 +94,12 @@ async function processUploadedFile(inputFile, results, inquiry, res) {
 
   try {
     await uploadFile(inputFile, results, inquiry, res);
-    logMemoryUsage("termina uploadfile");
+    //logMemoryUsage("termina uploadfile");
     await createVectorStore(res);
     await attachVectorStore(res);
     await createThread(res);
     await runThread(res, inputFile);
-    logMemoryUsage("termina runthread");
+    //logMemoryUsage("termina runthread");
 
     // Ensure the file deletion happens after the assistant's response is processed
     await new Promise((resolve) => {
@@ -113,7 +114,7 @@ async function processUploadedFile(inputFile, results, inquiry, res) {
 
     deleteFile(uploadedFile.id);
     openaiResponse = openaiResponse.replace(/'/g, '"');
-    logMemoryUsage("fin de processuploadedfile");
+    // logMemoryUsage("fin de processuploadedfile");
     await (() => {
       stream = null;
     });
@@ -186,6 +187,8 @@ async function runThread(res, inputFile) {
       .on("textCreated", () => console.log("assistant >"))
       .on("toolCallCreated", (event) => console.log("assistant " + event.type))
       .on("messageDone", async (event) => {
+        console.log("primera respuesta", event.content);
+
         if (event.content[0].type === "text") {
           const { text } = await event.content[0];
           openaiResponse = await event.content[0].text.value;
@@ -202,6 +205,10 @@ async function runThread(res, inputFile) {
           console.log("assistant resp2", openaiResponse);
           openaiResponse = cleanText(openaiResponse);
           console.log("cleanText(openaiResponse)"), openaiResponse;
+        } else {
+          console.log("ELSE!!!!!!!!");
+
+          awaitopenaiResponse = `[{"COMPANY NAME":"${inputFile}", "SALES CONTACT":"no fue bien procesada por IA", "WECHAT":"NF"}]`;
         }
       });
     await console.log(stream);
@@ -211,6 +218,12 @@ async function runThread(res, inputFile) {
 }
 
 function clean_openai_response(openaiResponse) {
+  console.log("pre primera limpieza start", openaiResponse.substr(0, 14));
+  console.log(
+    "pre primera limpieza end",
+    openaiResponse.substr(openaiResponse.length - 14, openaiResponse.length - 1)
+  );
+
   //Remove linebreaks and spaces
   // Remove line breaks and spaces between '[' and '{'
   openaiResponse = openaiResponse.replace(/\[\s*\{/g, "[{");
