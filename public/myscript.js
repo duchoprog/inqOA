@@ -86,6 +86,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Get the input element to modify TITLE element dinamically
+  const projectNameInput = document.getElementById("projectName-input");
+
+  // Add an event listener for the 'input' event
+  projectNameInput.addEventListener("input", function () {
+    // Update the document title with the current value of the input field
+    document.title = projectNameInput.value;
+  });
+
   // Handle final submission
   finalSubmitButton.addEventListener("click", () => {
     document.querySelector(".spinnerContainer").style.display = "block";
