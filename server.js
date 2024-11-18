@@ -7,6 +7,13 @@ const xlsx = require("xlsx");
 require("dotenv").config(); // Require dotenv configuration
 const routes = require("./routes");
 const ejs = require("ejs");
+const { google } = require("googleapis");
+
+const oauth2Client = new google.auth.OAuth2(
+  process.env.CLIENT_ID,
+  process.env.CLIENT_SECRET,
+  process.env.REDIRECT_URI
+);
 
 const OpenAI = require("openai");
 const {
@@ -244,6 +251,7 @@ app.post(
           const contentText = `Provider name: ${contentObj.title}\n${contentObj.content}`;
           const contentFilePath = path.join(
             __dirname,
+            req.body.sessionID,
             "uploads",
             `${contentObj.title}.txt`
           );
@@ -303,9 +311,13 @@ app.post(
 app.get("/download", (req, res) => {
   console.log("download is being hit");
   console.log(req.query);
-  const resourceUrl = req.query.id; // Assuming the resource URL is passed as a query parameter
+  const resourceUrl = req.query.id; // the resource URL is passed as a query parameter
+  const projectName = req.query.projectName; // the project name is passed as a query parameter
   const downPath = path.join(__dirname, resourceUrl, "output");
-  res.render("download.ejs", { resourceUrl: resourceUrl });
+  res.render("download.ejs", {
+    resourceUrl: resourceUrl,
+    projectName: projectName,
+  });
 });
 app.get("/download2", (req, res) => {
   console.log("download2 is being hit");
@@ -324,4 +336,22 @@ app.get("/error", (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+});
+// Scopes required to manage files in Google Drive
+const SCOPES = ["https://www.googleapis.com/auth/drive.file"];
+
+app.get("/auth/google", (req, res) => {
+  const url = oauth2Client.generateAuthUrl({
+    access_type: "offline",
+    scope: SCOPES,
+  });
+  res.redirect(url);
+});
+
+app.get("/auth/google/callback", async (req, res) => {
+  const { code } = req.query;
+  const { tokens } = await oauth2Client.getToken(code);
+  oauth2Client.setCredentials(tokens);
+  req.session.tokens = tokens;
+  res.redirect("/choose-folder"); // Redirect to folder selection
 });

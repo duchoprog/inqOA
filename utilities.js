@@ -179,7 +179,10 @@ async function writeOutputToExcel(responseArray, res, projectName, sessionID) {
   setTimeout(() => {}, 5000);
   console.log("wating...");
 
-  await res.json({ success: true, redirectUrl: `/download?id=${sessionID}` });
+  await res.json({
+    success: true,
+    redirectUrl: `/download?id=${sessionID}&projectName=${projectName}`,
+  });
 }
 
 //DELETE ALL FILES IN FOLDER

@@ -1,18 +1,20 @@
-<!-- views/downloadExcel.ejs -->
 <!DOCTYPE html>
 <html>
   <head>
-    <title>InquiryProcessor-GBP</title>
+    <title><%= projectName %></title>
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-    <!-- <link rel="stylesheet" type="text/css" href="/stylesheets/ejsStyle.css" /> -->
   </head>
-
   <body>
-    <h2>Descargar Excel</h2>
+    <h2>
+      Download
+      <!-- or Upload  -->Excel
+    </h2>
     <form action="/download/excel" method="get">
       <input type="hidden" name="resourceUrl" value="<%= resourceUrl %>" />
-
-      <button type="submit">Descargar Excel</button>
+      <button type="submit">Download Excel</button>
     </form>
+    <button onclick="window.location.href='/auth/google'" style="display: none">
+      Upload to Google Drive
+    </button>
   </body>
 </html>
