@@ -176,13 +176,15 @@ async function writeOutputToExcel(responseArray, res, projectName, sessionID) {
     `./${sessionID}/output/${projectName}-${d}.xlsx`
   );
 
-  setTimeout(() => {}, 5000);
-  console.log("wating...");
+  setTimeout(() => {
+    console.log("nice wait");
 
-  await res.json({
-    success: true,
-    redirectUrl: `/download?id=${sessionID}&projectName=${projectName}`,
-  });
+    res.json({
+      success: true,
+      redirectUrl: `/download?id=${sessionID}&projectName=${projectName}`,
+    });
+  }, 5000);
+  console.log("wating...");
 }
 
 //DELETE ALL FILES IN FOLDER
