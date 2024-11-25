@@ -13,7 +13,10 @@
       <input type="hidden" name="resourceUrl" value="<%= resourceUrl %>" />
       <button type="submit">Download Excel</button>
     </form>
-    <button onclick="window.location.href='/auth/google'" style="display: none">
+    <button
+      onclick="window.location.href='/auth/google?resourceUrl=<%= encodeURIComponent(resourceUrl) %>'"
+      style="display: block"
+    >
       Upload to Google Drive
     </button>
   </body>

@@ -2,12 +2,14 @@ const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
 const fs = require("fs");
+const fsp = require("fs").promises;
 const path = require("path");
 const xlsx = require("xlsx");
 require("dotenv").config(); // Require dotenv configuration
 const routes = require("./routes");
 const ejs = require("ejs");
 const { google } = require("googleapis");
+const session = require("express-session");
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
@@ -46,6 +48,21 @@ const upload = multer({ storage: storage });
 let folderPath = "newproject";
 
 app.use(cors());
+app.use(
+  session({
+    // It holds the secret key for session
+    secret: process.env.SESSION_KEY,
+
+    // Forces the session to be saved
+    // back to the session store
+    resave: true,
+
+    // Forces a session that is "uninitialized"
+    // to be saved to the store
+    saveUninitialized: true,
+    cookie: { secure: false },
+  })
+);
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.json()); // For parsing application/json
@@ -338,12 +355,17 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 // Scopes required to manage files in Google Drive
-const SCOPES = ["https://www.googleapis.com/auth/drive.file"];
+const SCOPES = ["https://www.googleapis.com/auth/drive"];
 
 app.get("/auth/google", (req, res) => {
+  // Save the resourceUrl in the session
+  req.session.resourceUrl = req.query.resourceUrl;
+  console.log("salvo url en auth", req.session.resourceUrl);
+
+  // Redirect to Google's OAuth login page
   const url = oauth2Client.generateAuthUrl({
     access_type: "offline",
-    scope: SCOPES,
+    scope: ["https://www.googleapis.com/auth/drive"],
   });
   res.redirect(url);
 });
@@ -354,4 +376,72 @@ app.get("/auth/google/callback", async (req, res) => {
   oauth2Client.setCredentials(tokens);
   req.session.tokens = tokens;
   res.redirect("/choose-folder"); // Redirect to folder selection
+});
+app.post("/save-folder", async (req, res) => {
+  console.log("req.body en save-folder", req.body);
+
+  req.session.resourceUrl = req.body.resourceUrl; // Store the resourceUrl
+  req.session.folderId = req.body.folderId; // Store the resourceUrl
+
+  console.log("salvo url en save-folder", req.session.resourceUrl);
+
+  res.redirect("/upload-to-drive");
+});
+
+app.get("/upload-to-drive", async (req, res) => {
+  console.log("req.session.resourceUrl", req.session.resourceUrl);
+
+  oauth2Client.setCredentials(req.session.tokens);
+  const drive = google.drive({ version: "v3", auth: oauth2Client });
+  const dir = path.join(__dirname, req.session.resourceUrl, "output");
+  let files = await fsp.readdir(dir);
+
+  const folderId = req.session.folderId;
+  const fileToDownload = path.join(
+    __dirname,
+    req.session.resourceUrl,
+    "output",
+    files[0]
+  );
+  console.log(folderId);
+
+  const resourceUrl = fileToDownload; // Retrieve the resourceUrl
+
+  const fileMetadata = {
+    name: files[0], // Adjust the name dynamically if needed
+    parents: [folderId],
+  };
+  const media = {
+    mimeType:
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    body: fs.createReadStream(resourceUrl), // Use the resourceUrl here
+  };
+
+  await drive.files.create({
+    resource: fileMetadata,
+    media: media,
+    fields: "id",
+  });
+
+  res.send("File uploaded successfully to Google Drive!");
+});
+
+app.get("/choose-folder", async (req, res) => {
+  oauth2Client.setCredentials(req.session.tokens);
+
+  const drive = google.drive({ version: "v3", auth: oauth2Client });
+
+  // List folders in the user's Google Drive
+  const response = await drive.files.list({
+    q: "mimeType='application/vnd.google-apps.folder'",
+    fields: "files(id, name, mimeType)",
+    spaces: "drive",
+  });
+
+  console.log(response.data.files);
+
+  res.render("chooseFolder", {
+    folders: response.data.files,
+    resourceUrl: req.session.resourceUrl, // Pass the resourceUrl to the view
+  });
 });

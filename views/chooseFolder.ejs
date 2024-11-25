@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Select Folder</title>
+  </head>
+  <body>
+    <h2>Select a Folder in Google Drive</h2>
+    <form action="/save-folder" method="post">
+      <input type="hidden" name="resourceUrl" value="<%= resourceUrl %>" />
+      <select name="folderId">
+        <% folders.forEach(folder => { %>
+        <option value="<%= folder.id %>"><%= folder.name %></option>
+        <% }) %>
+      </select>
+      <button type="submit">Save Folder</button>
+    </form>
+  </body>
+</html>
