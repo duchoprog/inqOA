@@ -3,21 +3,42 @@
   <head>
     <title><%= projectName %></title>
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="ejsStyle.css" />
   </head>
   <body>
-    <h2>
+    <h2 style="font-family: Arial, Helvetica, sans-serif">
       Download
       <!-- or Upload  -->Excel
     </h2>
     <form action="/download/excel" method="get">
       <input type="hidden" name="resourceUrl" value="<%= resourceUrl %>" />
-      <button type="submit">Download Excel</button>
+      <button
+        type="submit"
+        style="
+          background-color: #007bff;
+          border: none;
+          border-radius: 5px;
+          color: white;
+          margin: 5px;
+          padding: 1rem;
+        "
+      >
+        <h2>Download Excel</h2>
+      </button>
     </form>
     <button
       onclick="window.location.href='/auth/google?resourceUrl=<%= encodeURIComponent(resourceUrl) %>'"
-      style="display: block"
+      style="
+        background-color: #007bff;
+        border: none;
+        border-radius: 5px;
+        color: white;
+        margin: 5px;
+        display: block;
+        padding: 1rem;
+      "
     >
-      Upload to Google Drive
+      <h2>To Google Drive</h2>
     </button>
   </body>
 </html>
