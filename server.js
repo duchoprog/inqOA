@@ -10,6 +10,7 @@ const routes = require("./routes");
 const ejs = require("ejs");
 const { google } = require("googleapis");
 const session = require("express-session");
+const MongoStore = require("connect-mongo");
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
@@ -48,19 +49,20 @@ const upload = multer({ storage: storage });
 let folderPath = "newproject";
 
 app.use(cors());
+
 app.use(
   session({
-    // It holds the secret key for session
     secret: process.env.SESSION_KEY,
-
-    // Forces the session to be saved
-    // back to the session store
-    resave: true,
-
-    // Forces a session that is "uninitialized"
-    // to be saved to the store
+    resave: false,
     saveUninitialized: true,
-    cookie: { secure: false },
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_CONNECTION_STRING,
+
+      ttl: 72 * 60 * 60, // Session expiration in seconds
+    }),
+    cookie: {
+      maxAge: 72 * 60 * 60 * 1000, // Cookie expiration in milliseconds (24 hours)
+    },
   })
 );
 app.set("view engine", "ejs");
@@ -382,6 +384,7 @@ app.post("/save-folder", async (req, res) => {
 
   req.session.resourceUrl = req.body.resourceUrl; // Store the resourceUrl
   req.session.folderId = req.body.folderId; // Store the resourceUrl
+  console.log("req.session.folderId", req.session.folderId);
 
   console.log("salvo url en save-folder", req.session.resourceUrl);
 
@@ -389,7 +392,7 @@ app.post("/save-folder", async (req, res) => {
 });
 
 app.get("/upload-to-drive", async (req, res) => {
-  console.log("req.session.resourceUrl", req.session.resourceUrl);
+  console.log("req.session.resourceUrl", req.session);
 
   oauth2Client.setCredentials(req.session.tokens);
   const drive = google.drive({ version: "v3", auth: oauth2Client });
