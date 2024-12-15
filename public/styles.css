@@ -1,39 +1,74 @@
 /* public/styles.css */
 body {
   font-family: Arial, sans-serif;
-  margin: 20px;
+  margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background-color: #f0f0f0;
+  background-color: #f7f9fc;
 }
-h3 {
-  font-weight: lighter;
-  font-size: small;
+
+header {
+  text-align: center;
+  background-color: #007bff;
+  color: white;
+  padding: 20px 0;
+  margin-bottom: 20px;
 }
-.container {
-  background-color: #fff;
-  padding: 20px;
+
+#project-name-container {
   margin-top: 10px;
+}
+
+#project-name-container label {
+  font-size: 16px;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+#projectName-input {
+  padding: 5px;
+  font-size: 14px;
+  width: 300px;
+}
+
+h1 {
+  margin: 0;
+}
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px;
+  background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  width: 80%;
-  max-width: 800px;
+  margin: 0 auto;
+  width: 90%;
+}
+
+.side-by-side {
+  flex: 1;
+  min-width: 45%;
 }
 
 section {
   margin-bottom: 20px;
 }
 
-#drop-area,
-#previous-drop-area {
-  border: 2px dashed #ccc;
-  padding: 20px;
-  text-align: center;
-  margin-top: 10px;
+input[type="file"],
+textarea,
+input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+textarea {
+  resize: vertical;
 }
 
 button {
@@ -43,71 +78,69 @@ button {
   padding: 10px 20px;
   cursor: pointer;
   border-radius: 4px;
+  font-size: 16px;
 }
 
 button:hover {
   background-color: #0056b3;
 }
-.container {
-  display: flex;
-  flex-wrap: wrap;
+
+#drop-area,
+#previous-drop-area {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  background-color: #f9f9f9;
+  margin-top: 10px;
 }
 
-.side-by-side {
-  flex: 1;
-  min-width: 45%;
-  margin: 1rem;
+#drop-area.dragover,
+#previous-drop-area.dragover {
+  background-color: #f1f1f1;
 }
 
-#results-section {
-  width: 100%;
-  height: 4rem;
-}
-
-#drop-area.dragover {
-  background-color: #f0f0f0;
-}
-#addContentButton {
-  margin-top: 0.5rem;
-  width: 100%;
-}
-
-.contentContainer {
-  display: flex;
-  align-items: center; /* Align items vertically in the center */
-}
-
-.contentContainer label {
-  width: 7rem; /* Fixed width for the label */
-}
-#final-submit {
-  margin-top: 0.5rem;
-  font-size: large;
-}
-
-.contentContainer input,
-.contentContainer textarea {
-  flex: 1; /* Take up the remaining space */
-}
-#results-section {
-  height: 2rem;
-}
-#inquiry-section textarea {
-  width: 50vh;
-}
-#previousExcel {
-  position: relative;
-  width: 100%;
-  height: 300px; /* Adjust height as needed */
-  background-color: #f0f0f0; /* Adjust background color as needed */
-}
-
-.overlay {
-  position: absolute;
+.spinnerContainer {
+  display: none;
+  background-color: rgba(0, 0, 0, 0.4);
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: transparent; /* Gray semitransparent color */
-  pointer-events: none; /* Allows clicks to pass through the overlay */
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000;
+}
+
+.loading-spinner {
+  border: 16px solid #f3f3f3;
+  border-top: 16px solid #007bff;
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  animation: spin 2s linear infinite;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.button-container {
+  text-align: center;
+  margin-top: 20px;
+}
+
+footer {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 14px;
+  color: #666;
 }

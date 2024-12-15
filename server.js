@@ -49,6 +49,7 @@ const upload = multer({ storage: storage });
 let folderPath = "newproject";
 
 app.use(cors());
+app.use(express.static("public"));
 
 app.use(
   session({
@@ -104,9 +105,10 @@ app.post(
     var d = new Date();
     d = d.getTime().toString();
     console.log("req.body:", req.body);
+    console.log("req.files:", req.files);
     req.body.sessionID = d;
     await manageFolders(req.body.sessionID);
-    //console.log("req.body:", req.body);
+    console.log("req.body:", req.body);
     try {
       //await deleteOneFile("./excelBase/addInfoToThis.xlsx");
 

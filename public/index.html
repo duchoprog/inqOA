@@ -9,48 +9,21 @@
     />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
+    <script src="https://cdn.jsdelivr.net/npm/docx@8.0.4/build/index.min.js"></script>
 
     <title>AIIF</title>
     <link rel="stylesheet" href="styles.css" />
-    <style>
-      .spinnerContainer {
-        display: none;
-        background-color: rgba(5, 5, 5, 0.4);
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-      }
-      .loading-spinner {
-        display: block;
-        border: 16px solid #f3f3f3;
-        border-top: 16px solid #6698db;
-        border-radius: 50%;
-        width: 120px;
-        height: 120px;
-        animation: spin 2s linear infinite;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        margin-top: -60px;
-        margin-left: -60px;
-      }
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
-      }
-      #signature {
-        min-height: 2rem;
-      }
-    </style>
   </head>
   <body>
-    <div class="container">
+    <header>
+      <h1>AIIF</h1>
+      <div id="project-name-container">
+        <label for="projectName-input">Project Name:</label>
+        <input type="text" id="projectName-input" required />
+      </div>
+    </header>
+
+    <main class="container">
       <section id="upload-section" class="side-by-side">
         <h2>Upload Files</h2>
         <input type="file" id="file-input" multiple />
@@ -65,25 +38,30 @@
         <form id="content-form">
           <div class="contentContainer">
             <label for="title-input">Title:</label>
-            <input type="text" id="title-input" required /><br />
+            <input type="text" id="title-input" required />
           </div>
           <div class="contentContainer">
             <label for="content-input">Content:</label>
-            <textarea id="content-input" rows="5" required></textarea><br />
+            <textarea id="content-input" rows="5" required></textarea>
           </div>
-
-          <button type="submit" id="addContentButton">ADD</button>
+          <h3>Upload Pictures</h3>
+          <input type="file" id="picture-input" multiple />
+          <div id="drop-area">
+            <p>Drag & Drop files here</p>
+          </div>
+          <div id="file-list"></div>
+          <button type="submit" id="addContentButton">Add Content</button>
         </form>
         <div id="content-list"></div>
       </section>
-      <section id="inquiry-section">
-        <form id="inquiry-form">
-          <h2>Inquiry sent</h2>
-          <textarea id="inquiry-input" rows="8" required></textarea>
-        </form>
+
+      <section id="inquiry-section" class="side-by-side">
+        <h2>Inquiry Sent</h2>
+        <textarea id="inquiry-input" rows="8" required></textarea>
       </section>
+
       <section id="previousExcel" class="side-by-side">
-        <h2>Excel anterior</h2>
+        <h2>Previous Excel</h2>
         <input
           type="file"
           id="previous-file-input"
@@ -95,21 +73,23 @@
         </div>
         <div id="previous-file-list"></div>
       </section>
-      <section id="results-section">
-        <form id="results-form">
-          <label for="projectName-input">Project name:</label>
-          <input type="text" id="projectName-input" required />
-        </form>
-      </section>
+    </main>
 
+    <div class="button-container">
       <button id="final-submit">Submit All Information</button>
     </div>
+
     <div class="spinnerContainer">
       <div class="loading-spinner"></div>
     </div>
-    <div id="signature">
-      developed by <a href="mailto:duchoprog@gmail.com">duchoprog@gmail.com</a>
-    </div>
+
+    <footer>
+      <div id="signature">
+        Developed by
+        <a href="mailto:duchoprog@gmail.com">duchoprog@gmail.com</a>
+      </div>
+    </footer>
+
     <script src="myscript.js"></script>
   </body>
 </html>
