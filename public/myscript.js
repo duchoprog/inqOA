@@ -157,6 +157,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   finalSubmitButton.addEventListener("click", () => {
+      console.log("data enviada: ", new Date().toLocaleTimeString());
+
     document.querySelector(".spinnerContainer").style.display = "block";
 
     let projectName =
@@ -181,6 +183,8 @@ document.addEventListener("DOMContentLoaded", () => {
       body: data,
     })
       .then((response) => {
+          console.log("data recibida: ", new Date().toLocaleTimeString());
+
         if (response.ok) {
           return response.json();
         } else if (response.status === 302) {
